@@ -1,15 +1,17 @@
 Source: autoshutdown
-Section: unknown
+Section: utils
 Priority: optional
 Maintainer: Partizand <partizand@gmail.com>
-Build-Depends: debhelper (>= 11)
+Build-Depends: pandoc,debhelper (>= 11)
 Standards-Version: 4.1.3
-Homepage: <insert the upstream URL, if relevant>
-#Vcs-Browser: https://salsa.debian.org/debian/autoshutdown
-#Vcs-Git: https://salsa.debian.org/debian/autoshutdown.git
+Homepage: https://github.com/OpenMediaVault-Plugin-Developers/openmediavault-autoshutdown
+#Vcs-Browser: https://github.com/partizand/openmediavault-autoshutdown
+#Vcs-Git: https://github.com/partizand/openmediavault-autoshutdown.git
 
 Package: autoshutdown
 Architecture: all
-Depends: ${misc:Depends}
-Description: <insert up to 60 chars description>
- <insert long description, indented with spaces>
+Depends: fping,pm-utils,sysstat,net-tools,transmission-cli,${misc:Depends}
+Conflicts: openmediavault-autoshutdown
+Description: bash systemd daemon to shutdown host by inactivity.
+ Allow system to be automatically shutdown
+ based on use rather than a specified time.
