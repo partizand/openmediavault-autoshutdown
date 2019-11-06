@@ -23,6 +23,10 @@ override_dh_systemd_enable:
 override_dh_systemd_start:
 	dh_systemd_start --no-start --name=autoshutdown
 
+override_dh_auto_build:
+	pandoc debian/autoshutdown.1.md -s -t man > debian/autoshutdown.1
+	dh_auto_build
+
 # dh_make generated override targets
 # This is example for Cmake (See https://bugs.debian.org/641051 )
 #override_dh_auto_configure:
