@@ -41,3 +41,6 @@ debian/files
 debian/*.debhelper.log
 debian/*.debhelper
 debian/*substvars
+/debian-/
+/debian/autoshutdown/
+/debian/debhelper-build-stamp
