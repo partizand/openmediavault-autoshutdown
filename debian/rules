@@ -15,14 +15,11 @@
 
 
 %:
-	dh $@
+	dh $@ 
 
-override_dh_systemd_enable:
-	dh_systemd_enable --no-enable --name=autoshutdown
-
-override_dh_systemd_start:
-	dh_systemd_start --no-start --name=autoshutdown
-
+override_dh_installsystemd:
+	dh_installsystemd --no-start --no-enable
+	
 override_dh_auto_build:
 	pandoc debian/autoshutdown.1.md -s -t man > debian/autoshutdown.1
 	dh_auto_build
