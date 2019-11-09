@@ -477,26 +477,72 @@ _check_transmission()
 		
 		if [ -f /usr/bin/transmission-remote ]; then
 			# auth if needed
-			auth="" #"--auth username:password"
+			auth=$TRANSMISSION_AUTH  #"--auth username:password" or blank
 			torrentlist="transmission-remote --list "$auth
 			
 			count=$($torrentlist | cut -c25-31 | sed -e '/^Done/ d; /^Unknown/ d; 1d; $d')
 			
 			if $DEBUG; then
-				_log "DEBUG: -------------------------------------------"
+				# _log "DEBUG: -------------------------------------------"
 				_log "DEBUG: _check_transmission(): count: $count"
 				
 			fi
 			
 			if [ -z "$count" ]; then
-				_log "INFO: Transmission no active downloads"
+				if $DEBUG ; then _log "DEBUG: Transmission no active downloads"; fi
 				
 			else
 				_log "INFO: Transmission is downloading now"
 				let RVALUE++
 			fi
 		else
-			_log "INFO: Transmission check disabled. Not found /usr/bin/transmission-remote. Install transmission-cli package"
+			_log "WARN: Transmission check disabled. Not found /usr/bin/transmission-remote. Install transmission-cli package"
+			
+		fi
+	
+	fi
+	
+	return ${RVALUE}
+	
+	
+}
+
+################################################################
+#
+#   name         : _check_qbittorrent
+#   parameter      : none
+#   global return   : none
+#   return         : 1      : if qbittorrent is downloading torrents, no shutdown
+#               : 0      : if qbittorrent is seeding only
+#
+# This function use qbittorrent-cli from https://github.com/fedarovich/qbittorrent-cli
+
+_check_qbittorrent()
+{
+	
+	RVALUE=0
+	
+	if [ "$QBITTORRENT_CHECK" = "true" ] ; then
+		
+		
+		if which qbt > /dev/null 2>&1; then 
+			# auth if needed
+			auth=$QBITTORRENT_AUTH # "--url http://localhost:8080 -username user --password pass"
+			
+			torrentlist="qbt torrent list --format list --filter downloading "$auth
+			
+			count=$($torrentlist)
+			
+			if [ -z "$count" ]; then
+				
+				if $DEBUG ; then _log "DEBUG: qBittorrent no active downloads"; fi 
+				
+			else
+				_log "INFO: qBittorrent is downloading now"
+				let RVALUE++
+			fi
+		else
+			_log "WARN: qBittorrent check disabled. Not found qbt bin. Install qbittorrent-cli from https://github.com/fedarovich/qbittorrent-cli"
 			
 		fi
 	
@@ -1004,10 +1050,16 @@ _check_config()
 	fi
 	
 	if [ ! -z "$TRANSMISSION_CHECK" ]; then
-		[[ "$TRANSMISSION_CHECK" = "true" || "$TRANSMISSION_CHECK" = "false" ]] || { _log "WARN: AUTOUNRARCHECK not set properly. It has to be 'true' or 'false'."
+		[[ "$TRANSMISSION_CHECK" = "true" || "$TRANSMISSION_CHECK" = "false" ]] || { _log "WARN: TRANSMISSION_CHECK not set properly. It has to be 'true' or 'false'."
 				_log "WARN: Set TRANSMISSION_CHECK to false"
 				TRANSMISSION_CHECK="false"; }
 	fi
+	
+	if [ ! -z "$QBITTORRENT_CHECK" ]; then
+		[[ "$QBITTORRENT_CHECK" = "true" || "$QBITTORRENT_CHECK" = "false" ]] || { _log "WARN: QBITTORRENT_CHECK not set properly. It has to be 'true' or 'false'."
+				_log "WARN: Set QBITTORRENT_CHECK to false"
+				QBITTORRENT_CHECK="false"; }
+	fi	
 
 	# Flag: 1 - 999 (cycles)
 	[[ "$CYCLES" =~ ^([1-9]|[1-9][0-9]|[1-9][0-9]{2})$ ]] || {
@@ -1491,8 +1543,22 @@ _check_system_active()
 		fi
 	else
 		if $DEBUG ; then _log "DEBUG: _check_transmission(): _check_transmission not called -> CNT: $CNT "; fi
-	fi   
+	fi  # > if[ $CNT -eq 0 ]; then 
 
+    if [ $CNT -eq 0 ]; then
+		# PRIO 9: Do a QBITTORRENT_CHECK
+		if [ "$QBITTORRENT_CHECK" = "true" ] ; then
+			_check_qbittorrent
+			if [ $? -gt 0 ]; then
+				let CNT++
+			fi
+
+			if $DEBUG ; then _log "DEBUG: _check_qbittorrent(): call _check_qbittorrent -> CNT: $CNT "; fi
+		fi
+	else
+		if $DEBUG ; then _log "DEBUG: _check_qbittorrent(): _check_qbittorrent not called -> CNT: $CNT "; fi
+	fi  # > if[ $CNT -eq 0 ]; then 
+	
 	return ${CNT};
 }
 
@@ -1530,6 +1596,18 @@ if ! $ENABLE; then
 fi
 
 _check_networkconfig
+
+# TRANSMISSION_CHECK enabled and transmission_remote installed
+if $TRANSMISSION_CHECK && ! which transmission-remote > /dev/null; then
+	_log "WARN: TRANSMISSION_CHECK enabled, but transmission-remote not found! Please install it with 'apt-get install transmission-cli'"
+	exit 1
+fi
+
+# TRANSMISSION_CHECK enabled and transmission_remote installed
+if $QBITTORRENT_CHECK && ! which qbt > /dev/null; then
+	_log "WARN: QBITTORRENT_CHECK enabled, but qbittorrent cli not found! Please install it from https://github.com/fedarovich/qbittorrent-cli"
+	exit 1
+fi
 
 #### Testing fping ####
 if ! which fping > /dev/null; then

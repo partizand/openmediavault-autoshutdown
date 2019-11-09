@@ -98,6 +98,13 @@ CHECK_SAMBA="true"
 
 TRANSMISSION_CHECK="false"
 	# Check transmission is downloading
+TRANSMISSION_AUTH=""
+    # auth for transmission like "--auth username:password" or blank for skip auth
+    
+QBITTORRENT_CHECK="false"
+	# Check transmission is downloading
+QBITTORRENT_AUTH="--url http://localhost:8080 -username user --password pass"
+	# params for qbt --username --password --url
 	
 CHECK_CLI="true"
     # If set to true, will check for connected users.
