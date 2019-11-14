@@ -10,7 +10,7 @@ Homepage: https://github.com/OpenMediaVault-Plugin-Developers/openmediavault-aut
 
 Package: autoshutdown
 Architecture: all
-Depends: fping,pm-utils,sysstat,net-tools,transmission-cli,${misc:Depends}
+Depends: fping,pm-utils,sysstat,net-tools,${misc:Depends}
 Conflicts: openmediavault-autoshutdown
 Description: bash systemd daemon to shutdown host by inactivity.
  Allow system to be automatically shutdown
